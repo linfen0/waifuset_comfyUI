@@ -1,66 +1,8 @@
 import torch
-from waifuset.waifu_scorer.predict import WaifuScorer
+from .waifuset.waifu_scorer import WaifuScorer
 import os
 import folder_paths
-
 class WaifuScorerNode:
-    def __init__(self):
-        self.waifu_scorer = None
-        
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "image": ("IMAGE",),
-                "model_path": ("STRING", {
-                    "multiline": False,
-                    "default": "models/aesthetic/waifu_scorers_Aesthetic.safetensors"
-                }),
-                "device": (["cuda", "cpu"],),
-            },
-        }
-
-    RETURN_TYPES = ("FLOAT", "STRING",)
-    RETURN_NAMES = ("score", "formatted_score",)
-    FUNCTION = "score_image"
-    CATEGORY = "image/scoring"
-
-    def score_image(self, image, model_path, device):
-        if self.waifu_scorer is None:
-            self.waifu_scorer = WaifuScorer(
-                model_path=model_path, 
-                device=device if device == 'cuda' and torch.cuda.is_available() else 'cpu',
-                verbose=True
-            )
-        
-        # ComfyUI传入的是tensor格式图像,需要先保存
-        import tempfile
-        import os
-        from PIL import Image
-        import numpy as np
-        
-        # 将tensor转换为PIL图像
-        if len(image.shape) == 4:
-            image = image[0]
-        image = image.cpu().numpy()
-        image = (image * 255).astype(np.uint8)
-        image = Image.fromarray(image.transpose(1, 2, 0))
-        
-        # 保存为临时文件
-        temp_dir = tempfile.gettempdir()
-        temp_path = os.path.join(temp_dir, "temp_image.png")
-        image.save(temp_path)
-        
-        # 评分
-        score = self.waifu_scorer([temp_path])
-        formatted_score = f"Aesthetic Score: {score[0]:.2f}"
-        
-        # 删除临时文件
-        os.remove(temp_path)
-        
-        return (float(score[0]), formatted_score,)
-
-class AutoLoadWaifuScorerNode:
     def __init__(self):
         self.waifu_scorer = None
         self.model_dir = os.path.join(folder_paths.models_dir, "aesthetic")
@@ -110,40 +52,17 @@ class AutoLoadWaifuScorerNode:
                 verbose=True
             )
         
-        # ComfyUI传入的是tensor格式图像,需要先保存
-        import tempfile
-        from PIL import Image
-        import numpy as np
-        
-        # 将tensor转换为PIL图像
-        if len(image.shape) == 4:
-            image = image[0]
-        image = image.cpu().numpy()
-        image = (image * 255).astype(np.uint8)
-        image = Image.fromarray(image.transpose(1, 2, 0))
-        
-        # 保存为临时文件
-        temp_dir = tempfile.gettempdir()
-        temp_path = os.path.join(temp_dir, "temp_image.png")
-        image.save(temp_path)
-        
-        # 评分
-        score = self.waifu_scorer([temp_path])
+        score = self.waifu_scorer(image)
         formatted_score = f"Aesthetic Score: {score[0]:.2f}"
-        
-        # 删除临时文件
-        os.remove(temp_path)
         
         return (float(score[0]), formatted_score,)
 
 # 更新节点映射
 NODE_CLASS_MAPPINGS = {
     "WaifuScorer": WaifuScorerNode,
-    "AutoLoadWaifuScorer": AutoLoadWaifuScorerNode
 }
 
 # 更新显示名称映射
 NODE_DISPLAY_NAME_MAPPINGS = {
     "WaifuScorer": "Waifu Aesthetic Scorer",
-    "AutoLoadWaifuScorer": "Auto Load Waifu Scorer"
 }
