@@ -56,8 +56,10 @@ class WaifuScorerNode:
             self.last_model = model_path
         from torchvision.transforms import ToPILImage
         image=image.squeeze(0)
+        image=image.permute(2,0,1)
         print(f"\033[32m{image.shape}\033[0m")
-        score = self.waifu_scorer(list(ToPILImage()(image)))
+        to_pil=ToPILImage()
+        score = self.waifu_scorer([to_pil(image)])
         formatted_score = f"Aesthetic Score: {score[0]:.2f}"
         
         return (float(score[0]), formatted_score,)
