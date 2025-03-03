@@ -37,6 +37,7 @@ class WaifuScorer(object):
             self.logger.info(f"model path not found in local, trying to download from url: `{model_path}`")
             model_path = download_from_url(model_path, cache_dir=cache_dir)
 
+        self.model_path = model_path
         self.logger.print(f"loading pretrained model from `{logging.stylize(model_path, logging.ANSI.YELLOW, logging.ANSI.UNDERLINE)}`")
         with logging.timer("load model", logger=self.logger):
             self.mlp = load_model(model_path, input_size=768, device=device)
@@ -127,7 +128,7 @@ class WaifuScorer(object):
 
             # save image embeddings to cache
         if self.emb_cache_dir is not None:
-            os.makedirs(self.emb_cache_dir, exist_ok=True)
+            os.makedirs(name=self.emb_cache_dir, exist_ok=True)
             for i, (inp, img_emb) in enumerate(zip(inputs, image_or_tensors)):
                 if isinstance(inp, (str, Path)) or cache_paths:
                     cache_path = cache_paths[i] if cache_paths is not None else self.get_cache_path(inp)

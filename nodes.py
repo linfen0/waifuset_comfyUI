@@ -6,6 +6,7 @@ class WaifuScorerNode:
     def __init__(self):
         self.waifu_scorer = None
         self.model_dir = os.path.join(folder_paths.models_dir, "aesthetic")
+        self.last_model = None
         
     @classmethod
     def INPUT_TYPES(s):
@@ -44,15 +45,19 @@ class WaifuScorerNode:
                 device=device if device == 'cuda' and torch.cuda.is_available() else 'cpu',
                 verbose=True
             )
-        elif self.waifu_scorer.model_path != model_path:
+            self.last_model = model_path
+        elif self.last_model != model_path:
             # 如果选择了不同的模型，重新加载
             self.waifu_scorer = WaifuScorer(
                 model_path=model_path,
                 device=device if device == 'cuda' and torch.cuda.is_available() else 'cpu',
                 verbose=True
             )
-        
-        score = self.waifu_scorer(image)
+            self.last_model = model_path
+        from torchvision.transforms import ToPILImage
+        image=image.squeeze(0)
+        print(f"\033[32m{image.shape}\033[0m")
+        score = self.waifu_scorer(list(ToPILImage()(image)))
         formatted_score = f"Aesthetic Score: {score[0]:.2f}"
         
         return (float(score[0]), formatted_score,)
