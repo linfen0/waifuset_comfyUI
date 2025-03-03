@@ -4,9 +4,9 @@ import numpy as np
 from PIL import Image
 from pathlib import Path
 from typing import List, Union, Dict, Any, Optional
-from .const import WS_REPOS
-from ...utils import image_utils
-from .... import logging, const
+from ..const import WS_REPOS
+from ..utils import image_utils
+from .. import logging, const
 
 logger = logging.get_logger("WaifuScorer")
 
@@ -33,7 +33,7 @@ class WaifuScorer(object):
             if self.verbose:
                 self.logger.print(f"model path not set, switch to default: `{model_path}`")
         if not os.path.isfile(model_path):
-            from ...utils.file_utils import download_from_url
+            from ..utils.file_utils import download_from_url
             self.logger.info(f"model path not found in local, trying to download from url: `{model_path}`")
             model_path = download_from_url(model_path, cache_dir=cache_dir)
 
@@ -150,7 +150,7 @@ def load_clip_models(name: str = "ViT-L/14", device='cuda'):
 
 
 def load_model(model_path: str = None, input_size=768, device: str = 'cuda', dtype=None):
-    from .mlp import MLP
+    from ..mlp import MLP
     model = MLP(input_size=input_size)
     if model_path:
         if model_path.endswith(".safetensors"):
